@@ -278,6 +278,7 @@
 
         // Objeto para armazenar as imagens personalizadas inseridas pelo professor
         const customImages = {};
+        const letterImageBoundsCache = new WeakMap();
 
         let synth = null;
         try {
@@ -437,6 +438,45 @@
             });
         }
 
+        // Localiza o traçado dentro da imagem para ampliar sem esticar nem incluir margens vazias.
+        function getLetterImageBounds(img) {
+            if (letterImageBoundsCache.has(img)) return letterImageBoundsCache.get(img);
+
+            const imageWidth = img.naturalWidth || img.width;
+            const imageHeight = img.naturalHeight || img.height;
+            const sampleCanvas = document.createElement('canvas');
+            const sampleScale = Math.min(1, 768 / Math.max(imageWidth, imageHeight));
+            sampleCanvas.width = Math.max(1, Math.round(imageWidth * sampleScale));
+            sampleCanvas.height = Math.max(1, Math.round(imageHeight * sampleScale));
+            const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+            sampleCtx.drawImage(img, 0, 0, sampleCanvas.width, sampleCanvas.height);
+
+            const pixels = sampleCtx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height).data;
+            let minX = sampleCanvas.width, minY = sampleCanvas.height, maxX = -1, maxY = -1;
+            for (let y = 0; y < sampleCanvas.height; y++) {
+                for (let x = 0; x < sampleCanvas.width; x++) {
+                    const offset = (y * sampleCanvas.width + x) * 4;
+                    if (pixels[offset + 3] > 32 && pixels[offset] < 210 && pixels[offset + 1] < 210 && pixels[offset + 2] < 210) {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            const bounds = maxX >= minX && maxY >= minY
+                ? {
+                    x: minX / sampleCanvas.width * imageWidth,
+                    y: minY / sampleCanvas.height * imageHeight,
+                    width: (maxX - minX + 1) / sampleCanvas.width * imageWidth,
+                    height: (maxY - minY + 1) / sampleCanvas.height * imageHeight
+                }
+                : { x: 0, y: 0, width: imageWidth, height: imageHeight };
+            letterImageBoundsCache.set(img, bounds);
+            return bounds;
+        }
+
         // Renderiza a guia da letra selecionada (Imagem customizada carregada pelo professor ou fonte fallback)
         function drawLetterGuide(context, alpha) {
             const rect = canvas.getBoundingClientRect();
@@ -447,36 +487,36 @@
             context.globalAlpha = alpha;
 
             const currentLetter = alphabet[currentIndex];
+            const availableW = w * 0.8;
+            const availableH = h * 0.8;
 
             if (customImages[currentLetter] && customImages[currentLetter].complete) {
                 const img = customImages[currentLetter];
-                const paddingX = w * 0.1;
-                const paddingY = h * 0.1;
-                const availableW = w - (paddingX * 2);
-                const availableH = h - (paddingY * 2);
-
-                const baseScale = Math.min(availableW / img.width, availableH / img.height);
-                const scale = Math.min(baseScale * 2, (w * 0.96) / img.width, (h * 0.96) / img.height);
-                const customW = img.width * scale;
-                const customH = img.height * scale;
+                const bounds = getLetterImageBounds(img);
+                const scale = Math.min(availableW / bounds.width, availableH / bounds.height);
+                const customW = bounds.width * scale;
+                const customH = bounds.height * scale;
                 const customDx = (w - customW) / 2;
                 const customDy = (h - customH) / 2;
-                
-                context.drawImage(img, customDx, customDy, customW, customH);
+
+                context.drawImage(img, bounds.x, bounds.y, bounds.width, bounds.height, customDx, customDy, customW, customH);
             } else {
                 // Desenha texto guia bem definido no meio da área
-                let fontSize = h * 1.1;
+                let fontSize = availableH;
                 context.font = `bold ${fontSize}px 'Comic Neue', cursive, sans-serif`;
                 const metrics = context.measureText(currentLetter);
-                const textWidth = metrics.width;
-                const textHeight = (metrics.actualBoundingBoxAscent || fontSize * 0.8) + (metrics.actualBoundingBoxDescent || fontSize * 0.2);
-                const fitScale = Math.min(1, (w * 0.92) / textWidth, (h * 0.88) / textHeight);
+                const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.8;
+                const descent = metrics.actualBoundingBoxDescent || fontSize * 0.2;
+                const textHeight = ascent + descent;
+                const fitScale = Math.min(availableH / textHeight, (w * 0.92) / metrics.width);
                 fontSize *= fitScale;
                 context.font = `bold ${fontSize}px 'Comic Neue', cursive, sans-serif`;
+                const finalMetrics = context.measureText(currentLetter);
                 context.textAlign = 'center';
-                context.textBaseline = 'middle';
+                context.textBaseline = 'alphabetic';
+                const baselineY = (h + finalMetrics.actualBoundingBoxAscent - finalMetrics.actualBoundingBoxDescent) / 2;
                 context.fillStyle = '#1e293b';
-                context.fillText(currentLetter, w / 2, h / 2);
+                context.fillText(currentLetter, w / 2, baselineY);
             }
             context.restore();
         }
