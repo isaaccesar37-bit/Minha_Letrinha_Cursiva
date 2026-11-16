@@ -70,6 +70,30 @@
             opacity: 0.9;
         }
         .practice-content { position: relative; z-index: 1; }
+        .stroke-preview-badge {
+            position: absolute;
+            z-index: 15;
+            top: 0.75rem;
+            right: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.6rem;
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #075985;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
+            pointer-events: none;
+        }
+        #stroke-preview-mark {
+            display: block;
+            width: 2.25rem;
+            height: 14px;
+            border-radius: 9999px;
+            background: #2563eb;
+            transition: height 180ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 180ms ease;
+        }
         @media (max-width: 639px) {
             .practice-decor { opacity: 0.55; transform: scale(0.75); }
         }
@@ -159,6 +183,12 @@
             </div>
         </div>
 
+        <!-- Espessura automática baseada na letra-guia -->
+        <div class="w-full max-w-3xl mb-2 px-4 py-2 rounded-2xl bg-white/90 border border-sky-100 shadow-sm flex items-center justify-center gap-2 text-sky-800">
+            <span aria-hidden="true">✨</span>
+            <span class="text-sm font-semibold">Traço ajustado automaticamente à letra-guia</span>
+        </div>
+
         <!-- Tela de Desenho / Caligrafia -->
         <section class="practice-scene relative w-full max-w-5xl px-3 sm:px-8 py-5">
             <svg aria-hidden="true" focusable="false" viewBox="0 0 64 64" class="practice-decor hidden sm:block left-3 top-5 w-14 h-14 -rotate-12">
@@ -177,6 +207,12 @@
             <div class="practice-content flex flex-col items-center">
         <div class="w-full max-w-3xl flex items-center justify-between px-1 mb-2"><span class="text-sm font-bold text-sky-800">Área de prática</span><span class="text-xs text-sky-600 bg-sky-100 px-3 py-1 rounded-full">Cubra o modelo com o dedo ou mouse</span></div>
         <div class="canvas-container w-full max-w-3xl h-80 md:h-[30rem] relative flex items-center justify-center">
+
+            <div class="stroke-preview-badge" aria-hidden="true">
+                <span class="text-xs font-semibold">Traço</span>
+                <span id="stroke-preview-mark"></span>
+                <span id="stroke-preview-value" class="text-xs font-bold tabular-nums">14 px</span>
+            </div>
             
             <!-- Linhas de Caligrafia de Fundo -->
             <div class="absolute inset-0 caligraphy-line opacity-90 pointer-events-none"></div>
@@ -275,10 +311,20 @@
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
+        let strokeWidth = 14;
+
+        function setStrokeWidth(value) {
+            const parsedValue = Number(value);
+            strokeWidth = Number.isFinite(parsedValue) ? Math.min(32, Math.max(2, parsedValue)) : 14;
+            const previewMark = document.getElementById('stroke-preview-mark');
+            const previewValue = document.getElementById('stroke-preview-value');
+            if (previewMark) previewMark.style.height = `${strokeWidth}px`;
+            if (previewValue) previewValue.textContent = `${Math.round(strokeWidth)} px`;
+        }
 
         // Objeto para armazenar as imagens personalizadas inseridas pelo professor
         const customImages = {};
-        const letterImageBoundsCache = new WeakMap();
+        const letterImageAnalysisCache = new WeakMap();
 
         let synth = null;
         try {
@@ -438,9 +484,9 @@
             });
         }
 
-        // Localiza o traçado dentro da imagem para ampliar sem esticar nem incluir margens vazias.
-        function getLetterImageBounds(img) {
-            if (letterImageBoundsCache.has(img)) return letterImageBoundsCache.get(img);
+        // Localiza o traçado e estima a largura mediana da linha dentro da imagem.
+        function analyzeLetterImage(img) {
+            if (letterImageAnalysisCache.has(img)) return letterImageAnalysisCache.get(img);
 
             const imageWidth = img.naturalWidth || img.width;
             const imageHeight = img.naturalHeight || img.height;
@@ -452,11 +498,14 @@
             sampleCtx.drawImage(img, 0, 0, sampleCanvas.width, sampleCanvas.height);
 
             const pixels = sampleCtx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height).data;
+            const samplePixels = sampleCanvas.width * sampleCanvas.height;
+            const ink = new Uint8Array(samplePixels);
             let minX = sampleCanvas.width, minY = sampleCanvas.height, maxX = -1, maxY = -1;
             for (let y = 0; y < sampleCanvas.height; y++) {
                 for (let x = 0; x < sampleCanvas.width; x++) {
                     const offset = (y * sampleCanvas.width + x) * 4;
                     if (pixels[offset + 3] > 32 && pixels[offset] < 210 && pixels[offset + 1] < 210 && pixels[offset + 2] < 210) {
+                        ink[y * sampleCanvas.width + x] = 1;
                         if (x < minX) minX = x;
                         if (x > maxX) maxX = x;
                         if (y < minY) minY = y;
@@ -473,8 +522,60 @@
                     height: (maxY - minY + 1) / sampleCanvas.height * imageHeight
                 }
                 : { x: 0, y: 0, width: imageWidth, height: imageHeight };
-            letterImageBoundsCache.set(img, bounds);
-            return bounds;
+
+            // Distância aproximada ao contorno: os máximos locais ficam no centro do traço.
+            const distances = new Float32Array(samplePixels);
+            for (let i = 0; i < samplePixels; i++) distances[i] = ink[i] ? 1e6 : 0;
+            const sampleWidth = sampleCanvas.width;
+            const sampleHeight = sampleCanvas.height;
+            const diagonal = Math.SQRT2;
+            for (let y = 0; y < sampleHeight; y++) {
+                for (let x = 0; x < sampleWidth; x++) {
+                    const i = y * sampleWidth + x;
+                    if (!ink[i]) continue;
+                    let d = distances[i];
+                    if (x > 0) d = Math.min(d, distances[i - 1] + 1);
+                    if (y > 0) d = Math.min(d, distances[i - sampleWidth] + 1);
+                    if (x > 0 && y > 0) d = Math.min(d, distances[i - sampleWidth - 1] + diagonal);
+                    if (x + 1 < sampleWidth && y > 0) d = Math.min(d, distances[i - sampleWidth + 1] + diagonal);
+                    distances[i] = d;
+                }
+            }
+            for (let y = sampleHeight - 1; y >= 0; y--) {
+                for (let x = sampleWidth - 1; x >= 0; x--) {
+                    const i = y * sampleWidth + x;
+                    if (!ink[i]) continue;
+                    let d = distances[i];
+                    if (x + 1 < sampleWidth) d = Math.min(d, distances[i + 1] + 1);
+                    if (y + 1 < sampleHeight) d = Math.min(d, distances[i + sampleWidth] + 1);
+                    if (x + 1 < sampleWidth && y + 1 < sampleHeight) d = Math.min(d, distances[i + sampleWidth + 1] + diagonal);
+                    if (x > 0 && y + 1 < sampleHeight) d = Math.min(d, distances[i + sampleWidth - 1] + diagonal);
+                    distances[i] = d;
+                }
+            }
+
+            const strokeDiameters = [];
+            for (let y = 1; y < sampleHeight - 1; y++) {
+                for (let x = 1; x < sampleWidth - 1; x++) {
+                    const i = y * sampleWidth + x;
+                    const d = distances[i];
+                    if (!ink[i] || d < 1) continue;
+                    if (d >= distances[i - 1] && d >= distances[i + 1] &&
+                        d >= distances[i - sampleWidth] && d >= distances[i + sampleWidth] &&
+                        d >= distances[i - sampleWidth - 1] && d >= distances[i - sampleWidth + 1] &&
+                        d >= distances[i + sampleWidth - 1] && d >= distances[i + sampleWidth + 1]) {
+                        strokeDiameters.push(d * 2 / sampleScale);
+                    }
+                }
+            }
+            strokeDiameters.sort((a, b) => a - b);
+            const medianStrokeWidth = strokeDiameters.length
+                ? strokeDiameters[Math.floor(strokeDiameters.length / 2)]
+                : Math.min(bounds.width, bounds.height) * 0.08;
+
+            const analysis = { bounds, strokeWidth: medianStrokeWidth };
+            letterImageAnalysisCache.set(img, analysis);
+            return analysis;
         }
 
         // Renderiza a guia da letra selecionada (Imagem customizada carregada pelo professor ou fonte fallback)
@@ -492,13 +593,14 @@
 
             if (customImages[currentLetter] && customImages[currentLetter].complete) {
                 const img = customImages[currentLetter];
-                const bounds = getLetterImageBounds(img);
+                const { bounds, strokeWidth: sourceStrokeWidth } = analyzeLetterImage(img);
                 const scale = Math.min(availableW / bounds.width, availableH / bounds.height);
                 const customW = bounds.width * scale;
                 const customH = bounds.height * scale;
                 const customDx = (w - customW) / 2;
                 const customDy = (h - customH) / 2;
 
+                setStrokeWidth(sourceStrokeWidth * scale);
                 context.drawImage(img, bounds.x, bounds.y, bounds.width, bounds.height, customDx, customDy, customW, customH);
             } else {
                 // Desenha texto guia bem definido no meio da área
@@ -511,6 +613,7 @@
                 const fitScale = Math.min(availableH / textHeight, (w * 0.92) / metrics.width);
                 fontSize *= fitScale;
                 context.font = `bold ${fontSize}px 'Comic Neue', cursive, sans-serif`;
+                setStrokeWidth(fontSize * 0.075);
                 const finalMetrics = context.measureText(currentLetter);
                 context.textAlign = 'center';
                 context.textBaseline = 'alphabetic';
@@ -569,7 +672,7 @@
             ctx.moveTo(lastX, lastY);
             ctx.lineTo(coords.x, coords.y);
             ctx.strokeStyle = '#2563eb';
-            ctx.lineWidth = 14;
+            ctx.lineWidth = strokeWidth;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
