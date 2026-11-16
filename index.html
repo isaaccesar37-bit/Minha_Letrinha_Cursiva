@@ -70,30 +70,6 @@
             opacity: 0.9;
         }
         .practice-content { position: relative; z-index: 1; }
-        .stroke-preview-badge {
-            position: absolute;
-            z-index: 15;
-            top: 0.75rem;
-            right: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.45rem;
-            padding: 0.35rem 0.6rem;
-            border: 1px solid rgba(191, 219, 254, 0.9);
-            border-radius: 9999px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #075985;
-            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
-            pointer-events: none;
-        }
-        #stroke-preview-mark {
-            display: block;
-            width: 2.25rem;
-            height: 14px;
-            border-radius: 9999px;
-            background: #2563eb;
-            transition: height 180ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 180ms ease;
-        }
         @media (max-width: 639px) {
             .practice-decor { opacity: 0.55; transform: scale(0.75); }
         }
@@ -208,11 +184,6 @@
         <div class="w-full max-w-3xl flex items-center justify-between px-1 mb-2"><span class="text-sm font-bold text-sky-800">Área de prática</span><span class="text-xs text-sky-600 bg-sky-100 px-3 py-1 rounded-full">Cubra o modelo com o dedo ou mouse</span></div>
         <div class="canvas-container w-full max-w-3xl h-80 md:h-[30rem] relative flex items-center justify-center">
 
-            <div class="stroke-preview-badge" aria-hidden="true">
-                <span class="text-xs font-semibold">Traço</span>
-                <span id="stroke-preview-mark"></span>
-                <span id="stroke-preview-value" class="text-xs font-bold tabular-nums">14 px</span>
-            </div>
             
             <!-- Linhas de Caligrafia de Fundo -->
             <div class="absolute inset-0 caligraphy-line opacity-90 pointer-events-none"></div>
@@ -316,10 +287,6 @@
         function setStrokeWidth(value) {
             const parsedValue = Number(value);
             strokeWidth = Number.isFinite(parsedValue) ? Math.min(32, Math.max(2, parsedValue)) : 14;
-            const previewMark = document.getElementById('stroke-preview-mark');
-            const previewValue = document.getElementById('stroke-preview-value');
-            if (previewMark) previewMark.style.height = `${strokeWidth}px`;
-            if (previewValue) previewValue.textContent = `${Math.round(strokeWidth)} px`;
         }
 
         // Objeto para armazenar as imagens personalizadas inseridas pelo professor
