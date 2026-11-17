@@ -62,17 +62,7 @@
             will-change: transform, opacity;
         }
         .practice-scene { isolation: isolate; }
-        .practice-decor {
-            position: absolute;
-            z-index: 0;
-            pointer-events: none;
-            user-select: none;
-            opacity: 0.9;
-        }
         .practice-content { position: relative; z-index: 1; }
-        @media (max-width: 639px) {
-            .practice-decor { opacity: 0.55; transform: scale(0.75); }
-        }
         @media (max-width: 640px) {
             body { padding: 0.65rem; min-height: 100svh; }
             body > header { flex-wrap: wrap; gap: 0.65rem; padding: 0.75rem; border-radius: 1.25rem; }
@@ -104,6 +94,235 @@
             #mobile-action-controls { gap: 0.4rem; }
             #volume-control { min-width: 2.5rem; }
         }
+        @media (orientation: landscape) and (min-width: 480px) {
+            body { min-height: 100svh; padding: 0.5rem; justify-content: flex-start; }
+            body > header { flex: 0 0 auto; flex-wrap: nowrap; padding: 0.5rem 1rem; border-radius: 1.25rem; }
+            body > header > div:first-child { flex: 1 1 auto; width: auto; min-width: 0; }
+            body > header > div:last-child { width: auto; }
+            body > header > div:first-child > span { width: 2.75rem; height: 2.75rem; font-size: 1.6rem; }
+            body > header h1 { font-size: 1.45rem; line-height: 1.1; }
+            body > header p { font-size: 0.75rem; }
+            body > main {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(185px, 0.38fr);
+                grid-template-rows: auto auto 1fr;
+                grid-template-areas: "practice picker" "practice auto" "tip tip";
+                align-items: start;
+                align-content: start;
+                justify-content: stretch;
+                gap: 0.5rem 1rem;
+                margin: 0.5rem auto !important;
+                flex-grow: 1;
+            }
+            #letter-choice-panel {
+                grid-area: picker;
+                width: 100%;
+                margin: 0;
+                padding: 0.75rem;
+                border-radius: 1.25rem;
+            }
+            #letter-selector {
+                display: flex;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                gap: 0.4rem;
+                max-height: min(48svh, 320px);
+                overflow-x: hidden;
+                overflow-y: scroll;
+                padding: 0.2rem;
+                scrollbar-width: thin;
+                scrollbar-color: #93c5fd #eff6ff;
+            }
+            #letter-selector button { width: 100%; min-width: 0; height: 2.5rem; min-height: 2.5rem; flex: 0 0 auto; }
+            #mobile-action-controls {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                justify-content: stretch;
+                gap: 0.5rem;
+                padding-top: 0.65rem;
+            }
+            #mobile-action-controls > * { width: 100%; min-height: 2.6rem; }
+            #volume-control { min-width: 3rem; flex: 1; }
+            #stroke-auto-note {
+                grid-area: auto;
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                padding: 0.65rem;
+                font-size: 0.8rem;
+                align-self: start;
+            }
+            #practice-area {
+                grid-area: practice;
+                width: 100%;
+                max-width: none;
+                padding: 0.15rem;
+                align-self: start;
+            }
+            #practice-area .practice-content { width: 100%; }
+            #practice-area .practice-content > div:first-child { margin-bottom: 0.35rem; }
+            #practice-area .canvas-container {
+                width: 100%;
+                max-width: none;
+                height: clamp(160px, calc(100svh - 14rem), 420px) !important;
+                border-radius: 1.25rem;
+            }
+            #drawing-action-buttons { margin-top: 0.5rem; padding: 0; }
+            #drawing-action-buttons button { min-height: 2.75rem; }
+            body > main > div:last-child {
+                grid-area: tip;
+                width: 100%;
+                margin: 0;
+                font-size: 0.75rem;
+            }
+            body > footer { padding: 0.2rem 0; font-size: 0.65rem; }
+        }
+        @media (orientation: landscape) and (min-width: 480px) and (max-width: 700px) {
+            body > header { gap: 0.45rem; padding: 0.4rem 0.6rem; }
+            body > header h1 { font-size: 1.1rem; }
+            body > header p { display: none; }
+            body > header > div:last-child { gap: 0.4rem; }
+            body > header > div:last-child > div { padding: 0.25rem 0.45rem; }
+            body > main { grid-template-columns: minmax(0, 1fr) minmax(185px, 0.42fr); gap: 0.4rem 0.6rem; }
+            #letter-choice-panel { padding: 0.55rem; }
+            #letter-selector { max-height: min(40svh, 150px); gap: 0.3rem; }
+            #letter-selector button { height: 2.25rem; min-height: 2.25rem; }
+            #practice-area .practice-content > div:first-child > span:last-child { max-width: 50%; font-size: 0.65rem; line-height: 1.1; text-align: right; }
+            #practice-area .canvas-container { height: clamp(145px, calc(100svh - 13rem), 420px) !important; }
+        }
+        @media (orientation: landscape) and (min-width: 480px) and (max-width: 700px) and (max-height: 450px) {
+            body > main > div:last-child, body > footer { display: none; }
+        }
+        /* Layout anterior: seletor lateral e quadro com ações logo abaixo. */
+        #game-layout {
+            display: grid;
+            grid-template-columns: minmax(3.6rem, 0.16fr) minmax(0, 1fr);
+            grid-template-rows: auto auto 1fr;
+            grid-template-areas: "picker practice" "auto practice" "tip tip";
+            align-items: start;
+            align-content: start;
+            justify-content: stretch;
+            gap: 0.5rem 0.75rem;
+            margin: 0.75rem auto !important;
+            flex-grow: 1;
+        }
+        #letter-choice-panel {
+            grid-area: picker;
+            grid-column: 1;
+            grid-row: 1;
+            width: 100%;
+            min-width: 0;
+            margin: 0;
+            padding: 0.6rem;
+            border-radius: 1.1rem;
+            align-self: start;
+        }
+        #letter-choice-panel > div:first-child { width: 100%; }
+        #letter-choice-panel > div:first-child > span { white-space: normal; line-height: 1.2; }
+        #letter-selector {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            width: 100%;
+            max-height: min(52svh, 420px);
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-color: #93c5fd #eff6ff;
+            -webkit-overflow-scrolling: touch;
+        }
+        #letter-selector button {
+            width: 100%;
+            min-width: 0;
+            height: 2.35rem;
+            min-height: 2.35rem;
+            flex: 0 0 auto;
+        }
+        #stroke-auto-note {
+            grid-area: auto;
+            grid-column: 1;
+            grid-row: 2;
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+            margin: 0;
+            padding: 0.5rem;
+            align-self: start;
+        }
+        #stroke-auto-note span:last-child { font-size: 0.72rem; line-height: 1.2; }
+        #practice-area {
+            grid-area: practice;
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+            padding: 0.15rem;
+            align-self: start;
+        }
+        #practice-area .practice-content { width: 100%; }
+        #drawing-action-buttons {
+            display: flex;
+            flex-direction: row;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 48rem;
+            margin-top: 0.75rem;
+            padding: 0 0.25rem;
+        }
+        #drawing-action-buttons button { flex: 1 1 0; min-height: 2.75rem; writing-mode: horizontal-tb; }
+        #mobile-action-controls {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 48rem;
+            margin-top: 0.5rem;
+            padding-top: 0.65rem;
+            border-top: 1px solid #e0f2fe;
+        }
+        #mobile-action-controls > button { flex: 1 1 9rem; width: auto; min-height: 2.75rem; writing-mode: horizontal-tb; }
+        #mobile-action-controls label {
+            display: flex;
+            flex: 1 1 12rem;
+            flex-direction: row;
+            justify-content: center;
+            gap: 0.5rem;
+            width: auto;
+            min-height: 2.75rem;
+            padding: 0.5rem 0.75rem;
+        }
+        #mobile-action-controls label > span:not([aria-hidden]) { writing-mode: horizontal-tb; font-size: inherit; }
+        #volume-control { width: 5rem !important; min-width: 3rem !important; height: auto; writing-mode: horizontal-tb; direction: ltr; }
+        #volume-value { width: 2.25rem; font-size: inherit; }
+        #practice-area .canvas-container { width: 100%; max-width: 48rem; }
+        #stroke-auto-note {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+            margin: 0 0 0.65rem;
+            padding: 0.5rem;
+        }
+        #stroke-auto-note span:last-child { font-size: 0.75rem; line-height: 1.2; }
+        #practice-area .canvas-container { width: 100%; max-width: none; }
+        body > main > div:last-child { grid-area: tip; grid-column: 1 / -1; grid-row: 3; width: 100%; margin: 0; }
+        @media (min-width: 700px) {
+            #game-layout { grid-template-columns: minmax(132px, 0.18fr) minmax(0, 1fr); gap: 0.75rem 1rem; }
+            #letter-choice-panel { padding: 0.8rem; }
+        }
+        @media (max-width: 420px) {
+            #game-layout { grid-template-columns: minmax(3.25rem, 0.16fr) minmax(0, 1fr); gap: 0.4rem; }
+            #letter-choice-panel { padding: 0.3rem; }
+            #letter-choice-panel > div:first-child > span { font-size: 0.7rem; text-align: center; }
+            #letter-selector { max-height: min(48svh, 360px); }
+            #letter-selector button { height: 2.25rem; min-height: 2.25rem; }
+            #stroke-auto-note { display: block; padding: 0.4rem; }
+            #stroke-auto-note span:last-child { font-size: 0.65rem; }
+        }
     </style>
 </head>
 <body class="bg-sky-50 min-h-screen flex flex-col items-center justify-between p-4 select-none">
@@ -130,56 +349,26 @@
     </header>
 
     <!-- Área Principal de Jogo -->
-    <main class="w-full max-w-5xl flex flex-col items-center my-5 md:my-7 flex-grow justify-center">
+    <main id="game-layout" class="w-full max-w-5xl flex flex-col items-center my-5 md:my-7 flex-grow justify-center">
         
         <!-- Controles de Seleção de Letra -->
-        <div class="w-full mb-5 p-4 md:p-5 rounded-3xl bg-white/90 border border-sky-100 shadow-xl shadow-sky-100/70 space-y-4">
+        <div id="letter-choice-panel" class="w-full mb-5 p-4 md:p-5 rounded-3xl bg-white/90 border border-sky-100 shadow-xl shadow-sky-100/70 space-y-4">
             <div class="flex flex-col items-start gap-2 w-full overflow-hidden">
                 <span class="text-sm font-bold text-sky-800 whitespace-nowrap">Escolha uma letra para praticar</span>
                 <div id="letter-selector" class="flex gap-2 overflow-x-auto p-1 w-full">
                     <!-- Gerado via JavaScript -->
                 </div>
             </div>
-            <div id="mobile-action-controls" class="flex flex-wrap gap-2 w-full justify-center md:justify-end pt-3 border-t border-sky-100">
-                <button id="btn-audio" onclick="toggleAudio()" class="flex-1 md:flex-none bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-xl font-semibold text-sm transition shadow-sm flex items-center justify-center gap-1">
-                    🔊 Som: <span id="audio-status">Ligado</span>
-                </button>
-                <label for="volume-control" class="flex flex-1 md:flex-none items-center justify-center gap-2 bg-sky-50 border border-sky-100 px-3 py-2 rounded-xl text-sm text-sky-800">
-                    <span aria-hidden="true">🔉</span>
-                    <span class="font-semibold">Volume</span>
-                    <input id="volume-control" type="range" min="0" max="100" value="60" step="1" aria-label="Volume do som" oninput="setSoundVolume(this.value)" class="w-20 accent-sky-500 cursor-pointer">
-                    <output id="volume-value" for="volume-control" class="w-9 text-right font-bold tabular-nums">60%</output>
-                </label>
-                <button onclick="clearCanvas()" class="flex-1 md:flex-none bg-rose-100 hover:bg-rose-200 text-rose-700 px-4 py-2 rounded-xl font-semibold text-sm transition shadow-sm flex items-center justify-center gap-1">
-                    🔄 Apagar
-                </button>
-                <button onclick="checkWriting()" class="flex-1 md:flex-none bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-xl font-bold text-sm transition shadow-md transform active:scale-95 flex items-center justify-center gap-1">
-                    ✨ Verificar
-                </button>
-            </div>
         </div>
 
         <!-- Espessura automática baseada na letra-guia -->
-        <div class="w-full max-w-3xl mb-2 px-4 py-2 rounded-2xl bg-white/90 border border-sky-100 shadow-sm flex items-center justify-center gap-2 text-sky-800">
+        <div id="stroke-auto-note" class="w-full max-w-3xl mb-2 px-4 py-2 rounded-2xl bg-white/90 border border-sky-100 shadow-sm flex items-center justify-center gap-2 text-sky-800">
             <span aria-hidden="true">✨</span>
             <span class="text-sm font-semibold">Traço ajustado automaticamente à letra-guia</span>
         </div>
 
         <!-- Tela de Desenho / Caligrafia -->
-        <section class="practice-scene relative w-full max-w-5xl px-3 sm:px-8 py-5">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 64 64" class="practice-decor hidden sm:block left-3 top-5 w-14 h-14 -rotate-12">
-                <g transform="rotate(42 32 32)">
-                    <rect x="26" y="8" width="12" height="37" rx="3" fill="#facc15" stroke="#f59e0b" stroke-width="2"/>
-                    <path d="M26 13h12" stroke="#fb7185" stroke-width="7"/>
-                    <path d="M26 44h12L32 58z" fill="#f8fafc" stroke="#b45309" stroke-width="2" stroke-linejoin="round"/>
-                    <path d="M30 53l2 5 2-5" fill="#334155"/>
-                </g>
-            </svg>
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 40 40" class="practice-decor hidden sm:block right-10 top-3 w-9 h-9">
-                <path d="M20 2l4.2 11.8L37 15l-9.8 7.1L31 34l-11-7-11 7 3.8-11.9L3 15l12.8-1.2z" fill="#fde68a" stroke="#fbbf24" stroke-width="1.5" stroke-linejoin="round"/>
-            </svg>
-            
-            
+        <section id="practice-area" class="practice-scene relative w-full max-w-5xl px-3 sm:px-8 py-5">
             <div class="practice-content flex flex-col items-center">
         <div class="w-full max-w-3xl flex items-center justify-between px-1 mb-2"><span class="text-sm font-bold text-sky-800">Área de prática</span><span class="text-xs text-sky-600 bg-sky-100 px-3 py-1 rounded-full">Cubra o modelo com o dedo ou mouse</span></div>
         <div class="canvas-container w-full max-w-3xl h-80 md:h-[30rem] relative flex items-center justify-center">
@@ -203,6 +392,27 @@
                     Próxima Letra ➔
                 </button>
             </div>
+        </div>
+
+        <div id="drawing-action-buttons" class="w-full max-w-3xl flex gap-2 mt-3 px-1">
+            <button type="button" onclick="clearCanvas()" title="Apagar desenho" class="flex-1 bg-rose-100 hover:bg-rose-200 text-rose-700 px-4 py-3 rounded-xl font-semibold text-sm transition shadow-sm flex items-center justify-center gap-1 active:scale-95">
+                🔄 Apagar
+            </button>
+            <button type="button" onclick="checkWriting()" title="Verificar escrita" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl font-bold text-sm transition shadow-md active:scale-95 flex items-center justify-center gap-1">
+                ✨ Verificar
+            </button>
+        </div>
+
+        <div id="mobile-action-controls" class="w-full max-w-3xl flex flex-wrap gap-2 justify-center md:justify-end pt-3 mt-2 border-t border-sky-100">
+            <button id="btn-audio" type="button" onclick="toggleAudio()" class="flex-1 md:flex-none bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-xl font-semibold text-sm transition shadow-sm flex items-center justify-center gap-1">
+                🔊 Som: <span id="audio-status">Ligado</span>
+            </button>
+            <label for="volume-control" class="flex flex-1 md:flex-none items-center justify-center gap-2 bg-sky-50 border border-sky-100 px-3 py-2 rounded-xl text-sm text-sky-800">
+                <span aria-hidden="true">🔉</span>
+                <span class="font-semibold">Volume</span>
+                <input id="volume-control" type="range" min="0" max="100" value="60" step="1" aria-label="Volume do som" oninput="setSoundVolume(this.value)" class="w-20 accent-sky-500 cursor-pointer">
+                <output id="volume-value" for="volume-control" class="w-9 text-right font-bold tabular-nums">60%</output>
+            </label>
         </div>
 
             </div>
